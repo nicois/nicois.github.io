@@ -6,9 +6,8 @@ $( document ).ready(function() {
         console.log(auth_token);
         $( "#auth" ).hide();
         show_events();
-        // show_answers(event_id='181014292')
     } else {
-        window.location = "https://secure.meetup.com/oauth2/authorize?client_id=o7m94bmf6ddcrplook7hkq9r6m&response_type=token&redirect_uri=http://nicois.github.io/meetup/";
+        window.location = "https://secure.meetup.com/oauth2/authorize?client_id=o7m94bmf6ddcrplook7hkq9r6m&response_type=token&redirect_uri=" + encodeURIComponent(window.location.href);
     }
 
 });
@@ -30,7 +29,7 @@ show_events = function () {
             $( "#content" ).empty();
             console.log(data.results);
             _.each(_.sortBy(data.results, function (r) { return -r.time; }), function(result) {
-                $( "#content" ).append('<div class="meetup-event" url="' + result.event_url + '">' + new Date(result.time).toDateString() + " " + result.name + '</div>');
+                $( "#content" ).append('<div class="meetup-event" url="' + result.event_url + '"><a>' + new Date(result.time).toDateString() + " " + result.name + '</a></div>');
             });
             $( ".meetup-event" ).on( "click" , function() {
                 var event_url = $(this).attr('url');
