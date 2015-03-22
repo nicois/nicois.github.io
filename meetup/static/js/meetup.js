@@ -8,7 +8,7 @@ $( document ).ready(function() {
         show_events();
         // show_answers(event_id='181014292')
     } else {
-        window.location = "https://secure.meetup.com/oauth2/authorize?client_id=o7m94bmf6ddcrplook7hkq9r6m&response_type=token&redirect_uri=http://meetup.nikkell.com/";
+        window.location = "https://secure.meetup.com/oauth2/authorize?client_id=o7m94bmf6ddcrplook7hkq9r6m&response_type=token&redirect_uri=http://nicois.github.io/meetup/";
     }
 
 });
