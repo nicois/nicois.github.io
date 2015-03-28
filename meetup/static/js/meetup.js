@@ -20,7 +20,7 @@ $( document ).ready(function() {
         console.log(auth_token);
         $( "#auth" ).hide();
 
-        get_member_id();
+        show_events();
     } else {
         window.location = "https://secure.meetup.com/oauth2/authorize?client_id=o7m94bmf6ddcrplook7hkq9r6m&response_type=token&redirect_uri=" + encodeURIComponent(window.location.href);
     }
@@ -28,44 +28,12 @@ $( document ).ready(function() {
 });
 
 
-var yha_group_name = 'YHA-Cross-country-Ski-Club';
-
-
 murl = function(segment) {
     return "https://api.meetup.com/2/" + segment + "?access_token=" + auth_token;
 };
 
-get_member_id = function () {
-    var url = murl("members") + "&relation=self";
-    var memberId = loadFromLocalStorage("memberId");
-    if (memberId == null)
-        $.ajax({
-            url: url,
-            success: function( data ) {
-                console.log("processing result of " + url);
-                $( "#content" ).empty();
-                console.log(data.results);
-                var memberId = saveToLocalStorage("memberId", data.results[0].id);
-                show_events();
-                _.each(_.sortBy(data.results, function (r) { return -r.time; }), function(result) {
-                    $( "#content" ).append('<div class="meetup-event" url="' + result.event_url + '"><a>' + new Date(result.time).toDateString() + " " + result.name + '</a></div>');
-                });
-                $( ".meetup-event" ).on( "click" , function() {
-                    var event_url = $(this).attr('url');
-                    console.log(event_url);
-                    var event_id = event_url.split("/")[5];
-                    show_answers(event_id);
-                });
-            },
-            dataType: "jsonp"
-        });
-
-    show_events(memberId)
-
-};
-
-show_events = function (memberId) {
-    var url = murl("events") + "&status=upcoming,past&member_id=" + memberId;
+show_events = function () {
+    var url = murl("events") + "&status=upcoming,past&member_id=self";
     $.ajax({
         url: url,
         success: function( data ) {
