@@ -3,12 +3,16 @@ if(typeof(Storage) !== "undefined") {
         localStorage.setItem(k, v);
         return v;
     };
-    loadFromLocalStorage = function(k) {
-        return localStorage.getItem(k);
+    loadFromLocalStorage = function(k, def) {
+        var result = localStorage.getItem(k);
+        if (result == null)
+            return def;
+        else
+            return result;
     };
 } else {
     saveToLocalStorage = function(k, v) { return v; };
-    loadFromLocalStorage = function(k) { return null; };
+    loadFromLocalStorage = function(k, def) { return def; };
 }
 
 
@@ -40,7 +44,8 @@ show_events = function () {
             console.log("processing result of " + url);
             $( "#content" ).empty();
             console.log(data.results);
-            _.each(_.sortBy(data.results, function (r) { return -r.time; }), function(result) {
+            _.each(_.sortBy(_.filter(data.results, function (result) {return _.has(result, "announced");})
+                    , function (r) { return -r.time; }), function(result) {
                 $( "#content" ).append('<div class="meetup-event" url="' + result.event_url + '"><a>' + new Date(result.time).toDateString() + " " + result.name + '</a></div>');
             });
             $( ".meetup-event" ).on( "click" , function() {
