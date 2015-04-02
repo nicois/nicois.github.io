@@ -33,6 +33,7 @@ getQueryParams = function(queryString) {
 
 $( document ).ready(function() {
     if ($.cookie('access_token')) {
+        window.location.hash = '';
         show_events();
         return;
     }
