@@ -81,6 +81,11 @@ show_answers = function (event_id) {
             })));
             var table = $('<table border="1">');
             var tr = $('<tr>');
+
+            var th = $('<th>');
+            th.append("Photo");
+            tr.append(th);
+
             var th = $('<th>');
             th.append("Name");
             tr.append(th);
@@ -99,6 +104,13 @@ show_answers = function (event_id) {
 
             $.each(data.results, function(index, person) {
                 var tr = $('<tr>');
+                var td = $('<td>');
+                if (_.has(person, 'member_photo')) {
+                    var img = $('<img src="' + person.member_photo.thumb_link + '">');
+                    td.append(img);
+                }
+                tr.append(td);
+
                 var td = $('<td>');
                 if (_.has(person, 'member_photo')) {
                     var href = $('<a href="' + person.member_photo.photo_link + '">');
