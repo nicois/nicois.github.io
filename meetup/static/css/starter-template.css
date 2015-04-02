@@ -5,3 +5,11 @@ body {
   padding: 40px 15px;
   text-align: left;
 }
+
+img {
+    display: block;
+    max-width:120px;
+    max-height:120px;
+    width: auto;
+    height: auto;
+}
