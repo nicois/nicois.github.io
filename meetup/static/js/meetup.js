@@ -15,14 +15,31 @@ if(typeof(Storage) !== "undefined") {
     loadFromLocalStorage = function(k, def) { return def; };
 }
 
+getQueryParams = function(queryString) {
+  var query = (queryString || window.location.search).substring(1); // delete ?
+  if (!query) {
+    return false;
+  }
+  return _
+  .chain(query.split('&'))
+  .map(function(params) {
+    var p = params.split('=');
+    return [p[0], decodeURIComponent(p[1])];
+  })
+  .object()
+  .value();
+}
+
 
 $( document ).ready(function() {
-    var hash = window.location.hash;
-    if (hash.length > 0) {
-        auth_token=hash.split('&')[0].split('=')[1];
-        console.log(auth_token);
-        $( "#auth" ).hide();
-
+    if ($.cookie('access_token')) {
+        show_events();
+    }
+    if (window.location.hash.length > 0) {
+        var parsed_hash = getQueryParams(window.location.hash);
+        var date = new Date();
+        date.setTime(date.getTime() + (parseInt(parsed_hash.expires_in, 10) * 1000));
+        $.cookie('access_token', parsed_hash.access_token, { expires: date });
         show_events();
     } else {
         window.location = "https://secure.meetup.com/oauth2/authorize?client_id=o7m94bmf6ddcrplook7hkq9r6m&response_type=token&redirect_uri=" + encodeURIComponent(window.location.href);
@@ -32,7 +49,7 @@ $( document ).ready(function() {
 
 
 murl = function(segment) {
-    return "https://api.meetup.com/2/" + segment + "?access_token=" + auth_token;
+    return "https://api.meetup.com/2/" + segment + "?access_token=" + $.cookie("access_token");
 };
 
 show_events = function () {
