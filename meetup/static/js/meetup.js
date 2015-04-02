@@ -34,6 +34,7 @@ getQueryParams = function(queryString) {
 $( document ).ready(function() {
     if ($.cookie('access_token')) {
         show_events();
+        return;
     }
     if (window.location.hash.length > 0) {
         var parsed_hash = getQueryParams(window.location.hash);
@@ -41,6 +42,7 @@ $( document ).ready(function() {
         date.setTime(date.getTime() + (parseInt(parsed_hash.expires_in, 10) * 1000));
         $.cookie('access_token', parsed_hash.access_token, { expires: date });
         show_events();
+        return;
     } else {
         window.location = "https://secure.meetup.com/oauth2/authorize?client_id=o7m94bmf6ddcrplook7hkq9r6m&response_type=token&redirect_uri=" + encodeURIComponent(window.location.href);
     }
@@ -57,16 +59,13 @@ show_events = function () {
     $.ajax({
         url: url,
         success: function( data ) {
-            console.log("processing result of " + url);
             $( "#content" ).empty();
-            console.log(data.results);
             _.each(_.sortBy(_.filter(data.results, function (result) {return _.has(result, "announced");})
                     , function (r) { return -r.time; }), function(result) {
                 $( "#content" ).append('<div class="meetup-event" url="' + result.event_url + '"><a>' + new Date(result.time).toDateString() + " " + result.name + '</a></div>');
             });
             $( ".meetup-event" ).on( "click" , function() {
                 var event_url = $(this).attr('url');
-                console.log(event_url);
                 var event_id = event_url.split("/")[5];
                 show_answers(event_id);
             });
@@ -80,10 +79,7 @@ show_answers = function (event_id) {
     $.ajax({
         url: url,
         success: function( data ) {
-            console.log("processing result of " + url);
             $( "#content" ).empty();
-            console.log("x");
-            console.log(data);
             dd = data;
             var has_answers = function(person) { return _.has(person, "answers") };
             var has_answer = function(answer) { return _.has(answer, "answer") };
