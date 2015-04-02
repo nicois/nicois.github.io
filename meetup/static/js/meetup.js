@@ -41,6 +41,7 @@ $( document ).ready(function() {
         var date = new Date();
         date.setTime(date.getTime() + (parseInt(parsed_hash.expires_in, 10) * 1000));
         $.cookie('access_token', parsed_hash.access_token, { expires: date });
+        window.location.hash = '';
         show_events();
         return;
     } else {
