@@ -57,7 +57,7 @@ murl = function(segment) {
 };
 
 show_events = function () {
-    var url = murl("events") + "&status=upcoming,past&time=-1m,&member_id=self";
+    var url = murl("events") + "&status=upcoming,past&time=-12m,&member_id=self";
     $.ajax({
         url: url,
         success: function( data ) {
