@@ -122,7 +122,9 @@ show_answers = function (event_id) {
                 var td = $('<td>');
                 if (_.has(person, 'member_photo')) {
                     var img = $('<img src="' + person.member_photo.photo_link + '">');
-                    td.append(img);
+                    var href = $('<a href="' + person.member_photo.photo_link + '">');
+                    href.append(img);
+                    td.append(href);
                 }
                 tr.append(td);
 
