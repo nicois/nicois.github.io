@@ -1,20 +1,3 @@
-if(typeof(Storage) !== "undefined") {
-    saveToLocalStorage = function(k, v) {
-        localStorage.setItem(k, v);
-        return v;
-    };
-    loadFromLocalStorage = function(k, def) {
-        var result = localStorage.getItem(k);
-        if (result == null)
-            return def;
-        else
-            return result;
-    };
-} else {
-    saveToLocalStorage = function(k, v) { return v; };
-    loadFromLocalStorage = function(k, def) { return def; };
-}
-
 getQueryParams = function(queryString) {
   var query = (queryString || window.location.search).substring(1); // delete ?
   if (!query) {
