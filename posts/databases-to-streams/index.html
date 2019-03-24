@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    
+    <title>random thoughts  | Databases to Streams</title>
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+
+    <meta name="viewport" content="width=device-width,minimum-scale=1">
+    <meta name="generator" content="Hugo 0.47.1" />
+    
+    
+      <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+    
+
+    
+    
+      <link href="/dist/css/app.955516233bcafa4d2a1c13cea63c7b50.css" rel="stylesheet">
+    
+
+    
+
+    
+      
+    
+
+    
+
+    <meta property="og:title" content="Databases to Streams" />
+<meta property="og:description" content="Redis streams, added in version 5, provide a very powerful yet simple tool. One application of them is to propagate changes instantly from producer to consumer(s).
+In my organisation, many of our Sources of Truth are legacy SQL databases, which we have little control over. We need to consume changes in a range of downstream systems, and the pre-existing solution was to establish point-to-point services which would poll the databases, and write the changed records into another database." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="//nicois.github.io/posts/databases-to-streams/" /><meta property="article:published_time" content="2019-03-24T09:23:40&#43;11:00"/>
+<meta property="article:modified_time" content="2019-03-24T09:23:40&#43;11:00"/>
+<meta itemprop="name" content="Databases to Streams">
+<meta itemprop="description" content="Redis streams, added in version 5, provide a very powerful yet simple tool. One application of them is to propagate changes instantly from producer to consumer(s).
+In my organisation, many of our Sources of Truth are legacy SQL databases, which we have little control over. We need to consume changes in a range of downstream systems, and the pre-existing solution was to establish point-to-point services which would poll the databases, and write the changed records into another database.">
+
+
+<meta itemprop="datePublished" content="2019-03-24T09:23:40&#43;11:00" />
+<meta itemprop="dateModified" content="2019-03-24T09:23:40&#43;11:00" />
+<meta itemprop="wordCount" content="372">
+
+
+
+<meta itemprop="keywords" content="" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Databases to Streams"/>
+<meta name="twitter:description" content="Redis streams, added in version 5, provide a very powerful yet simple tool. One application of them is to propagate changes instantly from producer to consumer(s).
+In my organisation, many of our Sources of Truth are legacy SQL databases, which we have little control over. We need to consume changes in a range of downstream systems, and the pre-existing solution was to establish point-to-point services which would poll the databases, and write the changed records into another database."/>
+
+  </head>
+
+  <body class="ma0 avenir bg-near-white">
+
+    
+   
+  
+
+  <header>
+    <div class="bg-black">
+      <nav class="pv3 ph3 ph4-ns" role="navigation">
+  <div class="flex-l justify-between items-center center">
+    <a href="//nicois.github.io" class="f3 fw2 hover-white no-underline white-90 dib">
+      random thoughts
+    </a>
+    <div class="flex-l items-center">
+      
+
+      
+        <ul class="pl0 mr3">
+          
+          <li class="list f5 f4-ns fw4 dib pr3">
+            <a class="hover-white no-underline white-90" href="/posts/" title="Posts page">
+              Posts
+            </a>
+          </li>
+          
+        </ul>
+      
+      
+
+
+
+
+
+
+
+
+
+
+
+    </div>
+  </div>
+</nav>
+
+    </div>
+  </header>
+
+
+
+    <main class="pb7" role="main">
+      
+  
+  <article class="flex-l flex-wrap justify-between mw8 center ph3">
+
+    <header class="mt4 w-100">
+      <p class="f6 b helvetica tracked">
+          
+        POSTS
+      </p>
+      <h1 class="f1 athelas mb1">Databases to Streams</h1>
+      
+      <time class="f6 mv4 dib tracked" datetime="2019-03-24T09:23:40&#43;11:00">March 24, 2019</time>      
+      
+      
+    </header>
+
+    <section class="nested-copy-line-height lh-copy serif f4 nested-links nested-img mid-gray pr4-l w-two-thirds-l">
+
+<p>Redis streams, added in version 5, provide a very powerful yet simple tool.
+One application of them is to propagate changes instantly from producer to consumer(s).</p>
+
+<p>In my organisation, many of our Sources of Truth are legacy SQL databases, which we have
+little control over. We need to consume changes in a range of downstream systems, and the
+pre-existing solution was to establish point-to-point services which would poll the databases,
+and write the changed records into another database. I know, bad in a few ways. Redis
+to the rescue!</p>
+
+<h1 id="how-it-works">How it works</h1>
+
+<p>Say we want to generate a Stream of customer data, where a new message is XADDed to redis
+whenever something changes in our upstream database. Assume it is too dumb to support a
+LISTEN/NOTIFY pattern, too.</p>
+
+<p>(I will gloss over the initial poll - I can go into detail in another post, if there is interest)</p>
+
+
+<figure>
+    
+        <img src="/plant/redis_polling_agent.png" />
+    
+    
+</figure>
+
+
+<ol>
+<li><p>We create a polling agent, configured to periodically execute a SQL query against the source,
+using some means to identify customers with updates since time X. (If your query spans multiple
+tables, this may involve calculating the MAX of various timestamps).</p></li>
+
+<li><p>Each polling cycle, the agent queries records in the database which have been recently modified.
+&lsquo;Recent&rsquo; is defined as the oldest (lowest-scored) entry in our Sorted Set.
+To cater for potentially
+long-running transactions, we extend our window back a period of time, sufficient to catch these.
+This is ugly, but unavoidable.</p></li>
+
+<li><p>Now for the fun part: using a Lua script, we use a Sorted Set (<code>KEYS[1]</code>) to
+deduplicate the messages,
+before inserting them into a Stream (<code>KEYS[3]</code>).
+Notice that this command will also record the new
+message identifier (<code>KEYS[2]</code>) along with its timestamp (<code>epoch</code>) in the sorted set.
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-lua" data-lang="lua">   <span style="color:#66d9ef">local</span> maxlen <span style="color:#f92672">=</span> table.remove(ARGV)
+   <span style="color:#66d9ef">local</span> epoch <span style="color:#f92672">=</span> table.remove(ARGV)
+   <span style="color:#66d9ef">local</span> variant <span style="color:#f92672">=</span> table.remove(ARGV)
+   <span style="color:#66d9ef">local</span> score <span style="color:#f92672">=</span> redis.call(<span style="color:#e6db74">&#34;ZSCORE&#34;</span>, KEYS[<span style="color:#ae81ff">1</span>], KEYS[<span style="color:#ae81ff">2</span>])
+   <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> score <span style="color:#f92672">or</span> tonumber(score) <span style="color:#f92672">&lt;</span> tonumber(epoch) <span style="color:#66d9ef">then</span>
+   redis.call(<span style="color:#e6db74">&#34;ZADD&#34;</span>, KEYS[<span style="color:#ae81ff">1</span>], epoch, KEYS[<span style="color:#ae81ff">2</span>])
+   <span style="color:#66d9ef">return</span> redis.call(<span style="color:#e6db74">&#34;XADD&#34;</span>, KEYS[<span style="color:#ae81ff">3</span>], {} <span style="color:#e6db74">&#39;</span><span style="color:#960050;background-color:#1e0010">\</span><span style="color:#e6db74">*&#39;</span>, <span style="color:#e6db74">&#34;payload&#34;</span>, ARGV[<span style="color:#ae81ff">1</span>], <span style="color:#e6db74">&#34;variant&#34;</span>, variant, <span style="color:#e6db74">&#34;epoch&#34;</span>, epoch, <span style="color:#e6db74">&#34;pkey&#34;</span>, KEYS[<span style="color:#ae81ff">2</span>])
+   <span style="color:#66d9ef">end</span>
+   <span style="color:#66d9ef">return</span>
+   </code></pre></div></p></li>
+
+<li><p>After the new batch of records are processed by the Lua script, <code>ZREMREANGEBYSCORE</code> is used to
+discard members of the sorted set older than the oldest message we just processed.</p></li>
+
+<li><p>Sleep for a configured period, then re-poll the source database.</p></li>
+</ol>
+<ul class="pa0">
+  
+</ul>
+<div class="mt6">
+        
+      </div>
+    </section>
+
+    <aside class="w-30-l mt6-l">
+
+
+
+
+</aside>
+
+  </article>
+
+    </main>
+    <footer class="bg-black bottom-0 w-100 pa3" role="contentinfo">
+  <div class="flex justify-between">
+  <a class="f4 fw4 hover-white no-underline white-70 dn dib-ns pv2 ph3" href="//nicois.github.io" >
+    &copy; 2019 random thoughts
+  </a>
+    <div>
+
+
+
+
+
+
+
+
+
+
+</div>
+  </div>
+</footer>
+
+    
+
+  <script src="/dist/js/app.3fc0f988d21662902933.js"></script>
+
+
+  </body>
+</html>
