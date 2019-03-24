@@ -9,10 +9,10 @@
     <meta name="MobileOptimized" content="320">
 
     <meta name="viewport" content="width=device-width,minimum-scale=1">
-    <meta name="generator" content="Hugo 0.54.0" />
+    <meta name="generator" content="Hugo 0.47.1" />
     
     
-      <META NAME="ROBOTS" CONTENT="INDEX, FOLLOW">
+      <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
     
 
     
@@ -32,10 +32,8 @@
 <meta property="og:description" content="Redis streams, added in version 5, provide a very powerful yet simple tool. One application of them is to propagate changes instantly from producer to consumer(s).
 In my organisation, many of our Sources of Truth are legacy SQL databases, which we have little control over. We need to consume changes in a range of downstream systems, and the pre-existing solution was to establish point-to-point services which would poll the databases, and write the changed records into another database." />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="//nicois.github.io/posts/databases-to-streams/" />
-<meta property="article:published_time" content="2019-03-24T09:23:40&#43;11:00"/>
+<meta property="og:url" content="//nicois.github.io/posts/databases-to-streams/" /><meta property="article:published_time" content="2019-03-24T09:23:40&#43;11:00"/>
 <meta property="article:modified_time" content="2019-03-24T09:23:40&#43;11:00"/>
-
 <meta itemprop="name" content="Databases to Streams">
 <meta itemprop="description" content="Redis streams, added in version 5, provide a very powerful yet simple tool. One application of them is to propagate changes instantly from producer to consumer(s).
 In my organisation, many of our Sources of Truth are legacy SQL databases, which we have little control over. We need to consume changes in a range of downstream systems, and the pre-existing solution was to establish point-to-point services which would poll the databases, and write the changed records into another database.">
@@ -53,11 +51,9 @@ In my organisation, many of our Sources of Truth are legacy SQL databases, which
 <meta name="twitter:description" content="Redis streams, added in version 5, provide a very powerful yet simple tool. One application of them is to propagate changes instantly from producer to consumer(s).
 In my organisation, many of our Sources of Truth are legacy SQL databases, which we have little control over. We need to consume changes in a range of downstream systems, and the pre-existing solution was to establish point-to-point services which would poll the databases, and write the changed records into another database."/>
 
-      
-    
   </head>
 
-  <body class="ma0 avenir bg-near-white production">
+  <body class="ma0 avenir bg-near-white">
 
     
    
@@ -141,8 +137,12 @@ LISTEN/NOTIFY pattern, too.</p>
 
 <p>(I will gloss over the initial poll - I can go into detail in another post, if there is interest)</p>
 
+
 <figure>
-    <img src="/plant/redis_polling_agent.png"/> 
+    
+        <img src="/plant/redis_polling_agent.png" />
+    
+    
 </figure>
 
 
